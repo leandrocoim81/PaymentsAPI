@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -11,8 +12,11 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
     {
-        var jwtKey = configuration["Jwt:Key"]
-            ?? throw new InvalidOperationException("Jwt:Key is missing.");
+        var publicKeyB64 = configuration["Jwt:RsaPublicKey"]
+            ?? throw new InvalidOperationException("Jwt:RsaPublicKey is missing.");
+
+        var rsa = RSA.Create();
+        rsa.ImportFromPem(Encoding.UTF8.GetString(Convert.FromBase64String(publicKeyB64)));
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(o =>
@@ -25,7 +29,8 @@ public static class DependencyInjection
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = configuration["Jwt:Issuer"],
                     ValidAudience = configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+                    IssuerSigningKey = new RsaSecurityKey(rsa) { KeyId = "fcg-rsa-1" },
+                    ValidAlgorithms = new[] { SecurityAlgorithms.RsaSha256 }
                 };
             });
 
