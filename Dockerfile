@@ -1,3 +1,11 @@
+FROM curlimages/curl:latest AS dd-tracer
+USER root
+ARG DD_TRACER_VERSION=2.55.0
+RUN curl -Lo /tmp/dd-tracer.tar.gz \
+    "https://github.com/DataDog/dd-trace-dotnet/releases/download/v${DD_TRACER_VERSION}/datadog-dotnet-apm-${DD_TRACER_VERSION}-musl.tar.gz" \
+ && mkdir -p /opt/datadog \
+ && tar -C /opt/datadog -xzf /tmp/dd-tracer.tar.gz
+
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
 WORKDIR /app
 EXPOSE 8080
@@ -19,5 +27,6 @@ FROM base AS final
 RUN apk upgrade --no-cache
 WORKDIR /app
 COPY --from=build /app/publish .
+COPY --from=dd-tracer /opt/datadog /opt/datadog
 USER app
 ENTRYPOINT ["dotnet", "Payments.API.dll"]
