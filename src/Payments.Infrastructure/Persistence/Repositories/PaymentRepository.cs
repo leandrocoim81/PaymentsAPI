@@ -12,37 +12,33 @@ public class PaymentRepository(PaymentsDbContext dbContext) : IPaymentRepository
 
     public async Task SaveAsync(Payment payment, CancellationToken ct)
     {
-        var version = payment.Version - payment.UncommittedEvents.Count;
-        foreach (var @event in payment.UncommittedEvents)
-        {
-            version++;
-            var record = new PaymentEventRecord
+        var baseVersion = payment.Version - payment.UncommittedEvents.Count;
+        var records = payment.UncommittedEvents
+            .Select((@event, i) => new PaymentEventRecord
             {
-                Id = Guid.NewGuid(),
+                Id          = Guid.NewGuid(),
                 AggregateId = payment.Id,
-                EventType = @event.GetType().Name,
-                EventData = JsonSerializer.Serialize(@event, @event.GetType(), JsonOptions),
-                OccurredAt = DateTime.UtcNow,
-                Version = version
-            };
-            await dbContext.PaymentEvents.AddAsync(record, ct);
-        }
+                EventType   = @event.GetType().Name,
+                EventData   = JsonSerializer.Serialize(@event, @event.GetType(), JsonOptions),
+                OccurredAt  = DateTime.UtcNow,
+                Version     = baseVersion + i + 1
+            });
+
+        dbContext.PaymentEvents.AddRange(records);
         await dbContext.SaveChangesAsync(ct);
     }
 
     public async Task<Payment?> GetByOrderIdAsync(Guid orderId, CancellationToken ct)
     {
         var records = await dbContext.PaymentEvents
+            .AsNoTracking()
             .Where(e => e.AggregateId == orderId)
             .OrderBy(e => e.Version)
             .ToListAsync(ct);
 
-        if (!records.Any()) return null;
+        if (records.Count == 0) return null;
 
-        var events = records
-            .Select(DeserializeEvent)
-            .Where(e => e is not null)
-            .Cast<IDomainEvent>();
+        var events = records.Select(DeserializeEvent).OfType<IDomainEvent>();
 
         return Payment.LoadFromHistory(events);
     }
