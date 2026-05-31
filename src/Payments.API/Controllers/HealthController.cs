@@ -6,7 +6,6 @@ namespace Payments.API.Controllers;
 [Route("[controller]")]
 public class HealthController : ControllerBase
 {
-    /// <summary>Returns service health status</summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult Get() =>

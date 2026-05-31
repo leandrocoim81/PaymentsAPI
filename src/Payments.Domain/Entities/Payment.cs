@@ -22,7 +22,6 @@ public class Payment
 
     private Payment() { }
 
-    /// <summary>Reconstitui o agregado a partir do histórico de eventos (Event Sourcing).</summary>
     public static Payment LoadFromHistory(IEnumerable<IDomainEvent> events)
     {
         var payment = new Payment();

@@ -10,8 +10,6 @@ public class PaymentTests
     private static (Guid orderId, Guid userId, Guid gameId) Ids() =>
         (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
 
-    // --- Initiate ---
-
     [Fact]
     public void Initiate_SetsStatusInitiatedAndRaisesPaymentInitiatedEvent()
     {
@@ -38,8 +36,6 @@ public class PaymentTests
         var evt = Assert.IsType<PaymentInitiatedEvent>(payment.UncommittedEvents[0]);
         Assert.Equal(payment.Id, evt.PaymentId);
     }
-
-    // --- Process ---
 
     [Fact]
     public void Process_WhenNotInitiated_ThrowsDomainException()
@@ -98,8 +94,6 @@ public class PaymentTests
         Assert.Equal(PaymentStatus.Rejected, rejectedPayment.Status);
     }
 
-    // --- LoadFromHistory ---
-
     [Fact]
     public void LoadFromHistory_WithInitiatedAndApproved_ReconstitutesCorrectly()
     {
@@ -143,8 +137,6 @@ public class PaymentTests
         Assert.False(payment.IsApproved);
         Assert.Equal(2, payment.Version);
     }
-
-    // --- Version ---
 
     [Fact]
     public void Initiate_VersionIs1()

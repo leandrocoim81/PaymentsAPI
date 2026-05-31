@@ -19,8 +19,6 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // ── Banco de Dados ────────────────────────────────────────────────────
-
         services.AddDbContextPool<PaymentsDbContext>(
             options =>
                 options.UseNpgsql(
@@ -28,8 +26,6 @@ public static class DependencyInjection
             poolSize: 128);
 
         services.AddScoped<IPaymentRepository, PaymentRepository>();
-
-        // ── Mensageria — SQS (produção AWS) ───────────────────────────────────
 
         var region = configuration["AWS:Region"];
 
@@ -47,8 +43,6 @@ public static class DependencyInjection
         }
 
         services.AddScoped<IEventPublisher, SqsEventPublisher>();
-
-        // ── Mensageria — RabbitMQ (desenvolvimento local) ────────────────────
 
         services.AddMassTransit(x =>
         {

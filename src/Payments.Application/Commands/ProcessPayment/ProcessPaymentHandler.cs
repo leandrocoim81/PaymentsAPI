@@ -38,10 +38,8 @@ public class ProcessPaymentHandler(
             cmd.Price,
             payment.Status.Value);
 
-        // Publica no RabbitMQ (CatalogAPI saga consome)
         await publisher.Publish(evt, ct);
 
-        // Publica no SQS (produção AWS → trigger da Lambda de notificações)
         await eventPublisher.PublishPaymentProcessedAsync(evt, ct);
     }
 }

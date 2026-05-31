@@ -36,7 +36,6 @@ public class ProcessPaymentHandlerTests
 
         await sut.Handle(cmd, CancellationToken.None);
 
-        // Persistência
         repo.Verify(r => r.SaveAsync(
             It.Is<Payment>(p =>
                 p.UserId == cmd.UserId &&
@@ -45,7 +44,6 @@ public class ProcessPaymentHandlerTests
                 (p.Status == PaymentStatus.Approved || p.Status == PaymentStatus.Rejected)),
             It.IsAny<CancellationToken>()), Times.Once);
 
-        // RabbitMQ (CatalogAPI saga consome)
         rabbitPublisher.Verify(p => p.Publish(
             It.Is<PaymentProcessedEvent>(e =>
                 e.UserId == cmd.UserId &&
@@ -54,7 +52,6 @@ public class ProcessPaymentHandlerTests
                 (e.Status == "Approved" || e.Status == "Rejected")),
             It.IsAny<CancellationToken>()), Times.Once);
 
-        // SQS (Lambda de notificações consome)
         sqsPublisher.Verify(p => p.PublishPaymentProcessedAsync(
             It.Is<PaymentProcessedEvent>(e =>
                 e.UserId == cmd.UserId &&
