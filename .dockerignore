@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+**/.vs/
+.git/
+.github/
+infra/
+k8s-*.yaml
+*.md

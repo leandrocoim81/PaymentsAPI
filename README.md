@@ -3,7 +3,7 @@
 Microsserviço responsável por simular o processamento de pagamentos na plataforma FiapCloudGames.
 
 ## Responsabilidades
-- Consumir `OrderPlacedEvent` do RabbitMQ
+- Consumir `OrderPlacedEvent` via Amazon SQS/SNS (MassTransit)
 - Simular aprovação/rejeição do pagamento (90% aprovação)
 - Publicar `PaymentProcessedEvent` com o resultado
 
@@ -30,9 +30,24 @@ PaymentProcessedEvent (publicado)
 
 | Variável | Descrição |
 |----------|-----------|
-| `RabbitMQ__Host` | Host do RabbitMQ |
-| `RabbitMQ__Username` | Usuário RabbitMQ |
-| `RabbitMQ__Password` | Senha RabbitMQ |
+| `ConnectionStrings__Payments` | Connection string do RDS Postgres (event store) |
+| `Jwt__RsaPublicKey` | Chave pública RSA (base64 PEM) usada para validar o JWT (JWKS da UsersAPI) |
+| `Jwt__Issuer` | Issuer do JWT |
+| `Jwt__Audience` | Audience do JWT |
+| `AWS__Region` | Região AWS (filas SQS/SNS) |
+| `Messaging__Scope` | Prefixo de isolamento por ambiente das filas/tópicos SQS/SNS (ex.: `fcg-dev`) |
+
+Segredos (JWT, RDS) são injetados em runtime via AWS Secrets Manager + External Secrets Operator no
+EKS (spec 05); localmente, via `dotnet user-secrets` (spec 06).
+
+## Executando localmente
+
+Pré-requisitos: **.NET 8 SDK** + credenciais AWS com acesso aos recursos do ambiente `dev`. Sem
+docker-compose, sem Kubernetes:
+
+```bash
+dotnet run --project src/Payments.API
+```
 
 ## Health Check
 

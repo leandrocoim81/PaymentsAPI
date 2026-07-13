@@ -13,3 +13,12 @@ secrets.json
 .env
 *.pfx
 *.p12
+
+# Terraform state/vars com valores reais (spec 01/04/05 — infra própria do serviço)
+infra/.terraform/
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
+infra/*.tfvars
+!infra/*.tfvars.example
+infra/*.log
+infra/terraform.tfstate.d/
